@@ -6,11 +6,29 @@
 #include <string.h>
 #include <stdarg.h>
 #include <limits.h>
-#include <locale.h>
+//#include <locale.h>
 #include "svm.h"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+#include <stdint.h>
+
+static uint64_t seed = 114514;
+
+static void srand(unsigned s)
+{
+	seed = s-1;
+}
+
+static int rand(void)
+{
+	seed = 6364136223846793005ULL*seed + 1;
+	return (int)(seed>>33);
+}
+
+
+extern "C" int printf(const char *fmt, ...);
 
 int libsvm_version = LIBSVM_VERSION;
 typedef float Qfloat;
@@ -44,8 +62,8 @@ static inline double powi(double base, int times)
 
 static void print_string_stdout(const char *s)
 {
-	fputs(s,stdout);
-	fflush(stdout);
+	printf("%s", s);
+	//fflush(stdout);
 }
 static void (*svm_print_string) (const char *) = &print_string_stdout;
 #if 1
@@ -54,7 +72,7 @@ static void info(const char *fmt,...)
 	char buf[BUFSIZ];
 	va_list ap;
 	va_start(ap,fmt);
-	vsprintf(buf,fmt,ap);
+	vsnprintf(buf,BUFSIZ,fmt,ap);
 	va_end(ap);
 	(*svm_print_string)(buf);
 }
@@ -741,7 +759,7 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 			active_size = l;
 			info("*");
 		}
-		fprintf(stderr,"\nWARNING: reaching max number of iterations\n");
+		printf("\nWARNING: reaching max number of iterations\n");
 	}
 
 	// calculate rho
@@ -2040,7 +2058,7 @@ static int svm_one_class_probability(const svm_problem *prob, const svm_model *m
 	int pos_counter = prob->l-neg_counter;
 	if(neg_counter<nr_marks/2 || pos_counter<nr_marks/2)
 	{
-		fprintf(stderr,"WARNING: number of positive or negative decision values <%d; too few to do a probability estimation.\n",nr_marks/2);
+		printf("WARNING: number of positive or negative decision values <%d; too few to do a probability estimation.\n",nr_marks/2);
 		ret = -1;
 	}
 	else
@@ -2268,7 +2286,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 				if(param->weight_label[i] == label[j])
 					break;
 			if(j == nr_class)
-				fprintf(stderr,"WARNING: class label %d specified in weight is not found\n", param->weight_label[i]);
+				printf("WARNING: class label %d specified in weight is not found\n", param->weight_label[i]);
 			else
 				weighted_C[j] *= param->weight[i];
 		}
@@ -2444,7 +2462,7 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 	int nr_class;
 	if (nr_fold > l)
 	{
-		fprintf(stderr,"WARNING: # folds (%d) > # data (%d). Will use # folds = # data instead (i.e., leave-one-out cross validation)\n", nr_fold, l);
+		printf("WARNING: # folds (%d) > # data (%d). Will use # folds = # data instead (i.e., leave-one-out cross validation)\n", nr_fold, l);
 		nr_fold = l;
 	}
 	fold_start = Malloc(int,nr_fold+1);
@@ -2592,7 +2610,7 @@ double svm_get_svr_probability(const svm_model *model)
 		return model->probA[0];
 	else
 	{
-		fprintf(stderr,"Model doesn't contain information for SVR probability inference\n");
+		printf("Model doesn't contain information for SVR probability inference\n");
 		return 0;
 	}
 }
@@ -2757,16 +2775,19 @@ static const char *kernel_type_table[]=
 	"linear","polynomial","rbf","sigmoid","precomputed",NULL
 };
 
+
+#if 0
+
 int svm_save_model(const char *model_file_name, const svm_model *model)
 {
 	FILE *fp = fopen(model_file_name,"w");
 	if(fp==NULL) return -1;
 
-	char *old_locale = setlocale(LC_ALL, NULL);
-	if (old_locale) {
-		old_locale = strdup(old_locale);
-	}
-	setlocale(LC_ALL, "C");
+	//char *old_locale = setlocale(LC_ALL, NULL);
+	//if (old_locale) {
+	//	old_locale = strdup(old_locale);
+	//}
+	//setlocale(LC_ALL, "C");
 
 	const svm_parameter& param = model->param;
 
@@ -2855,8 +2876,8 @@ int svm_save_model(const char *model_file_name, const svm_model *model)
 		fprintf(fp, "\n");
 	}
 
-	setlocale(LC_ALL, old_locale);
-	free(old_locale);
+	//setlocale(LC_ALL, old_locale);
+	//free(old_locale);
 
 	if (ferror(fp) != 0 || fclose(fp) != 0) return -1;
 	else return 0;
@@ -3017,11 +3038,11 @@ svm_model *svm_load_model(const char *model_file_name)
 	FILE *fp = fopen(model_file_name,"rb");
 	if(fp==NULL) return NULL;
 
-	char *old_locale = setlocale(LC_ALL, NULL);
-	if (old_locale) {
-		old_locale = strdup(old_locale);
-	}
-	setlocale(LC_ALL, "C");
+	//char *old_locale = setlocale(LC_ALL, NULL);
+	//if (old_locale) {
+	//	old_locale = strdup(old_locale);
+	//}
+	//setlocale(LC_ALL, "C");
 
 	// read parameters
 
@@ -3038,8 +3059,8 @@ svm_model *svm_load_model(const char *model_file_name)
 	if (!read_model_header(fp, model))
 	{
 		fprintf(stderr, "ERROR: fscanf failed to read model\n");
-		setlocale(LC_ALL, old_locale);
-		free(old_locale);
+		//setlocale(LC_ALL, old_locale);
+		//free(old_locale);
 		free(model->rho);
 		free(model->label);
 		free(model->nSV);
@@ -3111,8 +3132,8 @@ svm_model *svm_load_model(const char *model_file_name)
 	}
 	free(line);
 
-	setlocale(LC_ALL, old_locale);
-	free(old_locale);
+	//setlocale(LC_ALL, old_locale);
+	//free(old_locale);
 
 	if (ferror(fp) != 0 || fclose(fp) != 0)
 		return NULL;
@@ -3120,6 +3141,7 @@ svm_model *svm_load_model(const char *model_file_name)
 	model->free_sv = 1;	// XXX
 	return model;
 }
+#endif
 
 void svm_free_model_content(svm_model* model_ptr)
 {
