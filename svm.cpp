@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 extern "C" void srand(unsigned s);
-extern "C" int rand(void)
+extern "C" int rand(void);
 
 
 extern "C" int printf(const char *fmt, ...);
