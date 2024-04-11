@@ -3,6 +3,18 @@
 
 #define LIBSVM_VERSION 332
 
+#define LIBSVM_PARAM_UNKNOWN_SVM_TYPE		-1
+#define LIBSVM_PARAM_UNKNOWN_KERNEL_TYPE	-2
+#define LIBSVM_PARAM_NEGATIVE_GAMMA		-3
+#define LIBSVM_PARAM_NEGATIVE_POLY_DEGREE	-4
+#define LIBSVM_PARAM_NON_POSITIVE_CACHE		-5
+#define LIBSVM_PARAM_NON_POSITIVE_EPS		-6
+#define LIBSVM_PARAM_NON_POSITIVE_C		-7
+#define LIBSVM_PARAM_WRONG_NU			-8
+#define LIBSVM_PARAM_NEGATIVE_P			-9
+#define LIBSVM_PARAM_WRONG_SHRINKING		-10
+#define LIBSVM_PARAM_WRONG_PROB			-11
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -93,7 +105,7 @@ void svm_free_model_content(struct svm_model *model_ptr);
 void svm_free_and_destroy_model(struct svm_model **model_ptr_ptr);
 void svm_destroy_param(struct svm_parameter *param);
 
-const char *svm_check_parameter(const struct svm_problem *prob, const struct svm_parameter *param);
+int svm_check_parameter(const struct svm_problem *prob, const struct svm_parameter *param);
 int svm_check_probability_model(const struct svm_model *model);
 
 void svm_set_print_string_function(void (*print_func)(const char *));

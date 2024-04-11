@@ -3187,7 +3187,7 @@ void svm_destroy_param(svm_parameter* param)
 	free(param->weight);
 }
 
-const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *param)
+int svm_check_parameter(const svm_problem *prob, const svm_parameter *param)
 {
 	// svm_type
 
@@ -3197,7 +3197,7 @@ const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *pa
 	   svm_type != ONE_CLASS &&
 	   svm_type != EPSILON_SVR &&
 	   svm_type != NU_SVR)
-		return "unknown svm type";
+		return LIBSVM_PARAM_UNKNOWN_SVM_TYPE;
 
 	// kernel_type, degree
 
@@ -3207,46 +3207,46 @@ const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *pa
 	   kernel_type != RBF &&
 	   kernel_type != SIGMOID &&
 	   kernel_type != PRECOMPUTED)
-		return "unknown kernel type";
+		return LIBSVM_PARAM_UNKNOWN_KERNEL_TYPE;
 
 	if((kernel_type == POLY || kernel_type == RBF || kernel_type == SIGMOID) &&
 	   param->gamma < 0)
-		return "gamma < 0";
+		return LIBSVM_PARAM_NEGATIVE_GAMMA;
 
 	if(kernel_type == POLY && param->degree < 0)
-		return "degree of polynomial kernel < 0";
+		return LIBSVM_PARAM_NEGATIVE_POLY_DEGREE;
 
 	// cache_size,eps,C,nu,p,shrinking
 
 	if(param->cache_size <= 0)
-		return "cache_size <= 0";
+		return LIBSVM_PARAM_NON_POSITIVE_CACHE;
 
 	if(param->eps <= 0)
-		return "eps <= 0";
+		return LIBSVM_PARAM_NON_POSITIVE_EPS;
 
 	if(svm_type == C_SVC ||
 	   svm_type == EPSILON_SVR ||
 	   svm_type == NU_SVR)
 		if(param->C <= 0)
-			return "C <= 0";
+			return LIBSVM_PARAM_NON_POSITIVE_C;
 
 	if(svm_type == NU_SVC ||
 	   svm_type == ONE_CLASS ||
 	   svm_type == NU_SVR)
 		if(param->nu <= 0 || param->nu > 1)
-			return "nu <= 0 or nu > 1";
+			return LIBSVM_PARAM_WRONG_NU;
 
 	if(svm_type == EPSILON_SVR)
 		if(param->p < 0)
-			return "p < 0";
+			return LIBSVM_PARAM_NEGATIVE_P;
 
 	if(param->shrinking != 0 &&
 	   param->shrinking != 1)
-		return "shrinking != 0 and shrinking != 1";
+		return LIBSVM_PARAM_WRONG_SHRINKING;
 
 	if(param->probability != 0 &&
 	   param->probability != 1)
-		return "probability != 0 and probability != 1";
+		return LIBSVM_PARAM_WRONG_PROB;
 
 
 	// check whether nu-svc is feasible
@@ -3302,7 +3302,7 @@ const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *pa
 		free(count);
 	}
 
-	return NULL;
+	return 0;
 }
 
 int svm_check_probability_model(const svm_model *model)
