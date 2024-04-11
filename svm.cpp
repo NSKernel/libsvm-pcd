@@ -14,18 +14,8 @@
 
 #include <stdint.h>
 
-static uint64_t seed = 114514;
-
-static void srand(unsigned s)
-{
-	seed = s-1;
-}
-
-static int rand(void)
-{
-	seed = 6364136223846793005ULL*seed + 1;
-	return (int)(seed>>33);
-}
+extern "C" void srand(unsigned s);
+extern "C" int rand(void)
 
 
 extern "C" int printf(const char *fmt, ...);
