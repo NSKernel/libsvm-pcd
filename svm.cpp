@@ -3294,7 +3294,7 @@ int svm_check_parameter(const svm_problem *prob, const svm_parameter *param)
 				{
 					free(label);
 					free(count);
-					return "specified nu is infeasible";
+					return LIBSVM_PARAM_INFEASIBLE_NU;
 				}
 			}
 		}

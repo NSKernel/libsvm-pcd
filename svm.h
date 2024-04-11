@@ -14,6 +14,7 @@
 #define LIBSVM_PARAM_NEGATIVE_P			-9
 #define LIBSVM_PARAM_WRONG_SHRINKING		-10
 #define LIBSVM_PARAM_WRONG_PROB			-11
+#define LIBSVM_PARAM_INFEASIBLE_NU		-12
 
 #ifdef __cplusplus
 extern "C" {
