@@ -2919,40 +2919,39 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 	if(model->label)
 	{
 		for(int i=0;i<nr_class;i++)
-			output->label[i] = model->label[i];
+			label[i] = model->label[i];
 	}
 
 	if(model->probA) // regression has probA only
 	{
 		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
-			output->probA[i] = model->probA[i];
+			probA[i] = model->probA[i];
 	}
 	if(model->probB)
 	{
 		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
-			output->probB[i] = model->probB[i];
+			probB[i] = model->probB[i];
 	}
 	if(model->prob_density_marks)
 	{
 		int nr_marks=10;
 		for(int i=0;i<nr_marks;i++)
-			output->prob_density_marks[i] = model->prob_density_marks[i];
+			prob_density_marks[i] = model->prob_density_marks[i];
 	}
 
 	if(model->nSV)
 	{
 		for(int i=0;i<nr_class;i++)
-			output->nSV[i] = model->nSV[i];
-		fprintf(fp, "\n");
+			nSV[i] = model->nSV[i];
 	}
 
 	const double * const *sv_coef = model->sv_coef;
 	const svm_node * const *SV = model->SV;
 
-	for(int i=0;i<l;i++)
+	for(int i=0;i<feature_length;i++)
 	{
 		for(int j=0;j<nr_class-1;j++)
-			SV_coef[l * j + i] = sv_coef[j][i];
+			SV_coef[feature_length * j + i] = sv_coef[j][i];
 
 		const svm_node *p = SV[i];
 
