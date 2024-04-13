@@ -2810,7 +2810,7 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 	double *prob_density_marks;
 	int *nSV;
 	double *SV_coef;
-	double *SV;
+	double *output_SV;
 	size_t increment;
 
 	struct svm_output_model *output;
@@ -2892,7 +2892,7 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 	output->feature_length = feature_length;
 
 	SV_coef = (double *)&(((char *)nSV) +  increment);
-	SV = (double *)&(((char *)SV_coef) + total_sv * nr_class * sizeof(double));
+	output_SV = (double *)&(((char *)SV_coef) + total_sv * nr_class * sizeof(double));
 
 	const svm_parameter& param = model->param;
 
@@ -2958,12 +2958,12 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 		const svm_node *p = SV[i];
 
 		if(param.kernel_type == PRECOMPUTED)
-			SV[i] = (int)(p->value);
+			output_SV[i] = (int)(p->value);
 		else {
 			int j = 0;
 			while(p->index != -1)
 			{
-				SV[feature_length * i + j] = p->value;
+				output_SV[feature_length * i + j] = p->value;
 				p++;
 				j++;
 			}
