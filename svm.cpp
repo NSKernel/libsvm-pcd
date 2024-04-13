@@ -2765,6 +2765,213 @@ static const char *kernel_type_table[]=
 	"linear","polynomial","rbf","sigmoid","precomputed",NULL
 };
 
+struct svm_output_model {
+	int	svm_type;
+	int	kernel_type;
+	int	degree;
+	double	gamma;
+	double	coef0;
+	int	nr_class;
+	int	total_sv;
+	char	has_label;
+	char	has_probA;
+	char	has_probB;
+	char	has_prob_density_marks;
+	char	has_nSV;
+	int	feature_length;
+	// double 	rho[nr_class * (nr_class - 1) / 2]
+	// int 		label[nr_class]
+	// double 	probA[nr_class * (nr_class - 1) / 2]
+	// double 	probB[nr_class * (nr_class - 1) / 2]
+	// double	prob_density_marks[10];
+	// int 		nSV[nr_class]
+	// double	SV_coef[total_sv * nr_class]
+	// double	SV[total_sv]
+	//		  [total_sv * feature_length]
+	char	model[];
+}
+
+extern "C" {
+	#include "runtime.h"
+}
+
+extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const svm_model *model, int feature_length)
+{
+	pcd_runtime_pointer_t output_app_ptr;
+	pcd_instance_t *instance = (pcd_instance_t *)(wasm_runtime_get_module_inst(exec_env));
+	size_t output_size = 0;
+	int nr_class = model->nr_class;
+	int total_sv = model->l;
+	int prob_size = nr_class * (nr_class - 1) / 2;
+	double *rho;
+	int *label;
+	double *probA;
+	double *probB;
+	double *prob_density_marks;
+	int *nSV;
+	double *SV_coef;
+	double *SV;
+	size_t increment;
+
+	struct svm_output_model *output;
+
+	output_size = sizeof(struct svm_output_model);
+	output_size += prob_size * sizeof(double);
+	if(model->label)
+		output_size += nr_class * sizeof(int);
+	if(model->probA)
+		output_size += prob_size * sizeof(double);
+	if(model->probB)
+		output_size += prob_size * sizeof(double);
+	if(model->prob_density_marks)
+		output_size += 10 * sizeof(double);
+	if(model->nSV)
+		output_size += nr_class * sizeof(int);
+	output_size += total_sv * nr_class * sizeof(double);
+	if (param.kernel_type == PRECOMPUTED)
+		output_size += total_sv * sizeof(double);
+	else
+		output_size += total_sv * feature_length * sizeof(double);
+
+	output_app_ptr = pcd_runtime_malloc(instance, output_size, (void **)&output);
+	if (output_app_ptr == 0) {
+		return 0;
+	}
+
+	rho = (double *)&(output->model[0]);
+
+	label = (int *)&(((char *)rho) + prob_size * sizeof(double));
+	if(model->label) {
+		increment = nr_class * sizeof(int);
+		output->has_label = 1;
+	}
+	else {
+		increment = 0;
+		output->has_label = 0;
+	}
+
+	probA = (double *)&(((char *)label) +  increment);
+	if(model->probA) {
+		increment = prob_size * sizeof(double);
+		output->has_probA = 1;
+	}
+	else {
+		increment = 0;
+		output->has_probA = 0;
+	}
+
+	probB = (double *)&(((char *)probA) +  increment);
+	if(model->probB) {
+		increment = prob_size * sizeof(double);
+		output->has_probB = 1;
+	}
+	else {
+		increment = 0;
+		output->has_probB = 0;
+	}
+
+	prob_density_marks = (double *)&(((char *)probB) +  prob_size * sizeof(double));
+	if(model->prob_density_marks) {
+		increment = 10 * sizeof(double);
+		output->has_prob_density_marks = 1;
+	}
+	else {
+		increment = 0;
+		output->has_prob_density_marks = 1;
+	}
+
+	nSV = (int *)&(((char *)prob_density_marks) +  increment);
+	if(model->nSV) {
+		increment = nr_class * sizeof(int);
+		output->has_nSV = 1;
+	}
+	else {
+		increment = 0;
+		output->has_nSV = 0;
+	}
+	output->feature_length = feature_length;
+
+	SV_coef = (double *)&(((char *)nSV) +  increment);
+	SV = (double *)&(((char *)SV_coef) + total_sv * nr_class * sizeof(double));
+
+	const svm_parameter& param = model->param;
+
+	output->svm_type = param.svm_type;
+	output->kernel_type = param.kernel_type;
+
+	if(param.kernel_type == POLY)
+		output->degree = param.degree;
+
+	if(param.kernel_type == POLY || param.kernel_type == RBF || param.kernel_type == SIGMOID)
+		output->gamma = param.gamma;
+
+	if(param.kernel_type == POLY || param.kernel_type == SIGMOID)
+		output->coef0 = param.coef0;
+
+	
+	output->nr_class = nr_class;
+	output->total_sv = total_sv;
+
+	{
+		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
+			rho[i] = model->rho[i];
+	}
+
+	if(model->label)
+	{
+		for(int i=0;i<nr_class;i++)
+			output->label[i] = model->label[i];
+	}
+
+	if(model->probA) // regression has probA only
+	{
+		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
+			output->probA[i] = model->probA[i];
+	}
+	if(model->probB)
+	{
+		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
+			output->probB[i] = model->probB[i];
+	}
+	if(model->prob_density_marks)
+	{
+		int nr_marks=10;
+		for(int i=0;i<nr_marks;i++)
+			output->prob_density_marks[i] = model->prob_density_marks[i];
+	}
+
+	if(model->nSV)
+	{
+		for(int i=0;i<nr_class;i++)
+			output->nSV[i] = model->nSV[i];
+		fprintf(fp, "\n");
+	}
+
+	const double * const *sv_coef = model->sv_coef;
+	const svm_node * const *SV = model->SV;
+
+	for(int i=0;i<l;i++)
+	{
+		for(int j=0;j<nr_class-1;j++)
+			SV_coef[l * j + i] = sv_coef[j][i];
+
+		const svm_node *p = SV[i];
+
+		if(param.kernel_type == PRECOMPUTED)
+			SV[i] = (int)(p->value);
+		else {
+			int j = 0;
+			while(p->index != -1)
+			{
+				SV[feature_length * i + j] = p->value;
+				p++;
+				j++;
+			}
+		}
+	}
+
+	return output_app_ptr;
+}
 
 #if 0
 
