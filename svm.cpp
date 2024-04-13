@@ -2789,7 +2789,7 @@ struct svm_output_model {
 	// double	SV[total_sv]
 	//		  [total_sv * feature_length]
 	char	model[];
-}
+};
 
 extern "C" {
 	#include "runtime.h"
