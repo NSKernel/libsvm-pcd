@@ -2795,7 +2795,7 @@ extern "C" {
 	#include "runtime.h"
 }
 
-extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const svm_model *model, int feature_length)
+extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const svm_model *model, int feature_length, int *saved_size)
 {
 	pcd_runtime_pointer_t output_app_ptr;
 	pcd_instance_t *instance = (pcd_instance_t *)(wasm_runtime_get_module_inst(exec_env));
@@ -2838,6 +2838,8 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 	if (output_app_ptr == 0) {
 		return 0;
 	}
+
+	*saved_size = output_size;
 
 	rho = (double *)&(output->model[0]);
 
