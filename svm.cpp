@@ -2812,6 +2812,7 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 	double *SV_coef;
 	double *output_SV;
 	size_t increment;
+	const svm_parameter& param = model->param;
 
 	struct svm_output_model *output;
 
@@ -2840,7 +2841,7 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 
 	rho = (double *)&(output->model[0]);
 
-	label = (int *)&(((char *)rho) + prob_size * sizeof(double));
+	label = (int *)(((char *)rho) + prob_size * sizeof(double));
 	if(model->label) {
 		increment = nr_class * sizeof(int);
 		output->has_label = 1;
@@ -2850,7 +2851,7 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 		output->has_label = 0;
 	}
 
-	probA = (double *)&(((char *)label) +  increment);
+	probA = (double *)(((char *)label) +  increment);
 	if(model->probA) {
 		increment = prob_size * sizeof(double);
 		output->has_probA = 1;
@@ -2860,7 +2861,7 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 		output->has_probA = 0;
 	}
 
-	probB = (double *)&(((char *)probA) +  increment);
+	probB = (double *)(((char *)probA) +  increment);
 	if(model->probB) {
 		increment = prob_size * sizeof(double);
 		output->has_probB = 1;
@@ -2870,7 +2871,7 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 		output->has_probB = 0;
 	}
 
-	prob_density_marks = (double *)&(((char *)probB) +  prob_size * sizeof(double));
+	prob_density_marks = (double *)(((char *)probB) +  prob_size * sizeof(double));
 	if(model->prob_density_marks) {
 		increment = 10 * sizeof(double);
 		output->has_prob_density_marks = 1;
@@ -2880,7 +2881,7 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 		output->has_prob_density_marks = 1;
 	}
 
-	nSV = (int *)&(((char *)prob_density_marks) +  increment);
+	nSV = (int *)(((char *)prob_density_marks) +  increment);
 	if(model->nSV) {
 		increment = nr_class * sizeof(int);
 		output->has_nSV = 1;
@@ -2891,10 +2892,8 @@ extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const 
 	}
 	output->feature_length = feature_length;
 
-	SV_coef = (double *)&(((char *)nSV) +  increment);
-	output_SV = (double *)&(((char *)SV_coef) + total_sv * nr_class * sizeof(double));
-
-	const svm_parameter& param = model->param;
+	SV_coef = (double *)(((char *)nSV) +  increment);
+	output_SV = (double *)(((char *)SV_coef) + total_sv * nr_class * sizeof(double));
 
 	output->svm_type = param.svm_type;
 	output->kernel_type = param.kernel_type;
