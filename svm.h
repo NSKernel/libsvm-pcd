@@ -90,7 +90,7 @@ struct svm_model
 struct svm_model *svm_train(const struct svm_problem *prob, const struct svm_parameter *param);
 void svm_cross_validation(const struct svm_problem *prob, const struct svm_parameter *param, int nr_fold, double *target);
 
-extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const svm_model *model, int feature_length);
+extern "C" pcd_runtime_pointer_t svm_save_model(wasm_exec_env_t exec_env, const svm_model *model, int feature_length, int *saved_size);
 struct svm_model *svm_load_model(const char *model_file_name);
 
 int svm_get_svm_type(const struct svm_model *model);
