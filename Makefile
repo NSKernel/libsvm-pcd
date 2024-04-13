@@ -1,6 +1,7 @@
 CXX ?= g++
 AR ?= ar
-CFLAGS = -Wall -Wconversion -O3 -fPIC -nostdinc -fno-builtin-printf -I . -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc
+ROOT_DIR ?= ../../../../
+CFLAGS = -Wall -Wconversion -O3 -fPIC -nostdinc -fno-builtin-printf -I. -I$(ROOT_DIR)/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -DPCD_CONFIG_RUNTIME_WAMR -I$(ROOT_DIR)/runtime/wamr/wasm-micro-runtime/core/iwasm/include -I$(ROOT_DIR)/runtime/wamr/wasm-micro-runtime/core/iwasm/interpreter -I$(ROOT_DIR)/runtime/wamr/wasm-micro-runtime/core/shared/utils -I$(ROOT_DIR)/runtime/wamr/wasm-micro-runtime/core/shared/platform/linux-sgx
 
 # Uncomment the following lines to enable parallelization with OpenMP
 # CFLAGS += -fopenmp
